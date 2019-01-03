@@ -2,6 +2,8 @@ package com.vividgames.android.gotquiz;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.content.res.AssetManager;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -10,6 +12,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import java.util.Locale;
 
 public class StartScreenAnimationFragment extends Fragment
 {
@@ -45,7 +49,10 @@ public class StartScreenAnimationFragment extends Fragment
             }
         });
 
-
+       AssetManager am = getActivity().getApplicationContext().getAssets();
+        Typeface typeface = Typeface.createFromAsset(am,
+                String.format(Locale.US, "font/%s", "josefin_sans_regular.ttf"));
+        mStartScreenText.setTypeface(typeface);
         return v;
     }
 

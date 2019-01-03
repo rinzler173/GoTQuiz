@@ -8,7 +8,8 @@ import android.util.Log;
 public class StartScreenActivity extends SingleFragmentActivity
 {
     private static final String TAG="StartScreenActivity";
-    private MediaPlayer themePlayer;
+    private MediaPlayer mThemePlayer;
+    private boolean mPlaySound;
 
     @Override
     protected Fragment createFragment()
@@ -20,15 +21,15 @@ public class StartScreenActivity extends SingleFragmentActivity
     protected void onResume()
     {
         super.onResume();
-        if (!themePlayer.isPlaying())
+        if (!mThemePlayer.isPlaying())
         {
             try
             {
-                themePlayer.prepareAsync();
+                mThemePlayer.prepareAsync();
             }
             catch (Exception e)
             {
-                Log.e(TAG, "Error preparing themePlayer!", e);
+                Log.e(TAG, "Error preparing mThemePlayer!", e);
             }
         }
     }
@@ -37,20 +38,27 @@ public class StartScreenActivity extends SingleFragmentActivity
     protected void onPause()
     {
         super.onPause();
-        themePlayer.pause();
-        themePlayer.stop();
+        if (mThemePlayer.isPlaying())
+        {
+            mThemePlayer.pause();
+            mThemePlayer.stop();
+        }
     }
 
     @Override
     protected void additionalActions()
     {
-        themePlayer=MediaPlayer.create(this, R.raw.start_screen_theme);
-        themePlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener()
+        mPlaySound=QueryPreferences.isSoundPlayed(this);
+        mThemePlayer =MediaPlayer.create(this, R.raw.start_screen_theme);
+        mThemePlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener()
         {
             @Override
             public void onPrepared(MediaPlayer mp)
             {
-                themePlayer.start();
+                if (mPlaySound)
+                {
+                    mThemePlayer.start();
+                }
             }
         });
     }
@@ -59,6 +67,6 @@ public class StartScreenActivity extends SingleFragmentActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        themePlayer.release();
+        mThemePlayer.release();
     }
 }

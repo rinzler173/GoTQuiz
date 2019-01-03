@@ -10,5 +10,7 @@
     <string name="game_completed_toast">You completed the game! Congratulations!</string>
     <string name="guessed_cheer_1">That is correct!</string>
     <string name="not_guessed_msg_1">That is incorrect!</string>
-    <string name="level_unlocked_toast">New level unlocked!</string>
+    <string name="level_unlocked_toast">Level %1$d unlocked!</string>
+    <string name="sound_off">Turn off sound</string>
+    <string name="sound_on">Turn on sound</string>
 </resources>

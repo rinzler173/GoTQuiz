@@ -1,6 +1,7 @@
 package com.vividgames.android.gotquiz;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,6 +10,9 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -17,6 +21,7 @@ import com.vividgames.android.gotquiz.databinding.FragmentLevelMenuBinding;
 import com.vividgames.android.gotquiz.databinding.ListItemLevelBinding;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
@@ -34,8 +39,8 @@ public class LevelMenuFragment extends Fragment
     LevelManager mLevelManager;
     UUID mStartedLevelId;
     LevelAdapter mLevelAdapter;
-    private ListItemLevelBinding mItemLevelBinding;
     private FragmentLevelMenuBinding mLevelMenuBinding;
+    private boolean mSoundPlayed;
 
     public static LevelMenuFragment newInstance()
     {
@@ -46,11 +51,13 @@ public class LevelMenuFragment extends Fragment
     public void onCreate(@Nullable Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         mLevelManager=LevelManager.get(getActivity());
         if (savedInstanceState!=null)
         {
             mStartedLevelId=(UUID)savedInstanceState.getSerializable(STARTED_LEVEL_ID);
         }
+        mSoundPlayed=QueryPreferences.isSoundPlayed(getActivity());
     }
 
     @Override
@@ -63,9 +70,35 @@ public class LevelMenuFragment extends Fragment
         return mLevelMenuBinding.getRoot();
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.settings_menu, menu);
+        MenuItem mToggleSound=menu.findItem(R.id.toggle_sound);
+        mToggleSound.setTitle(mSoundPlayed ? R.string.sound_off : R.string.sound_on);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.toggle_sound:
+                QueryPreferences.setPlaySound(getActivity(), !mSoundPlayed);
+                mSoundPlayed=QueryPreferences.isSoundPlayed(getActivity());
+                getActivity().invalidateOptionsMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private class LevelHolder extends RecyclerView.ViewHolder
     {
-
+        //variable for reference to holders view must be declared within it's class!
+        private ListItemLevelBinding mItemLevelBinding;
+        private Resources mResources=getResources();
 
         private LevelHolder(ListItemLevelBinding binding)
         {
@@ -77,6 +110,10 @@ public class LevelMenuFragment extends Fragment
         public void bind(Level level)
         {
             mItemLevelBinding.getViewModel().setLevel(level);
+            if (level.getLevelStatus()==LevelManager.LevelsSchema.StatusCodes.LEVEL_LOCKED)
+            {
+                mItemLevelBinding.getRoot().setBackground(mResources.getDrawable(R.drawable.level_icon_unplayable));
+            }
             mItemLevelBinding.executePendingBindings();
         }
     }
@@ -103,7 +140,6 @@ public class LevelMenuFragment extends Fragment
         {
             Level level=mLevels.get(position);
             holder.bind(level);
-
         }
 
         @Override
@@ -145,34 +181,35 @@ public class LevelMenuFragment extends Fragment
 
             boolean victorious=GameplayActivity.wasVictoryAchieved(data);
 
-            int messageResId;
+            String message;
+            Resources res=getResources();
             if (victorious)
             {
                 int completedLvlIndex=mLevelManager.getLevels().indexOf(mLevelManager.getLevel(mStartedLevelId));
-                messageResId=R.string.level_unlocked_toast;
                 boolean gameCompleted=mLevelManager.onLevelCompleted(mStartedLevelId);
 
                 if (gameCompleted)
                 {
-                    messageResId=R.string.game_completed_toast;
-                    ((MainMenuActivity)getActivity()).playSound(GAME_COMPLETED_SOUND_URI);
+                    message=res.getString(R.string.game_completed_toast);
+                    ((MainMenuActivity)Objects.requireNonNull(getActivity())).playSound(GAME_COMPLETED_SOUND_URI);
                 }
                 else
                 {
+                    message=String.format(res.getString(R.string.level_unlocked_toast), completedLvlIndex+2);
                     mLevelManager=LevelManager.get(getActivity());
                     mLevelAdapter=new LevelAdapter(mLevelManager.getLevels());
                     mLevelMenuBinding.recyclerView.setAdapter(mLevelAdapter);
-                    ((MainMenuActivity)getActivity()).playSound(LEVEL_COMPLETED_SOUND_URI);
+                    ((MainMenuActivity)Objects.requireNonNull(getActivity())).playSound(LEVEL_COMPLETED_SOUND_URI);
                     //mLevelAdapter.notifyItemChanged(completedLvlIndex+1);
                 }
                // mLevelAdapter.notifyItemChanged(completedLvlIndex);
             }
             else
             {
-                messageResId=R.string.level_failed_toast;
-                ((MainMenuActivity)getActivity()).playSound(LEVEL_FAILED_SOUND_URI);
+                message=res.getString(R.string.level_failed_toast);
+                ((MainMenuActivity)Objects.requireNonNull(getActivity())).playSound(LEVEL_FAILED_SOUND_URI);
             }
-            Toast.makeText(getActivity(), messageResId, Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
         }
     }
 }

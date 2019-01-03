@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 public class MainMenuActivity extends SingleFragmentActivity
 {
     private MediaPlayer mMenuSoundPlayer;
+    private boolean mPlaySound;
 
     public static Intent newIntent(Context packageContext)
     {
@@ -21,6 +22,13 @@ public class MainMenuActivity extends SingleFragmentActivity
         return LevelMenuFragment.newInstance();
     }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        mPlaySound=QueryPreferences.isSoundPlayed(this);
+    }
+
     protected void playSound(int soundId)
     {
         mMenuSoundPlayer =MediaPlayer.create(this, soundId);
@@ -29,7 +37,10 @@ public class MainMenuActivity extends SingleFragmentActivity
             @Override
             public void onPrepared(MediaPlayer mp)
             {
-                mMenuSoundPlayer.start();
+                if(mPlaySound)
+                {
+                    mMenuSoundPlayer.start();
+                }
             }
         });
 
@@ -39,9 +50,10 @@ public class MainMenuActivity extends SingleFragmentActivity
     protected void onPause()
     {
         super.onPause();
-        if (mMenuSoundPlayer !=null )
+        if (mMenuSoundPlayer !=null)
         {
             mMenuSoundPlayer.release();
         }
     }
+
 }

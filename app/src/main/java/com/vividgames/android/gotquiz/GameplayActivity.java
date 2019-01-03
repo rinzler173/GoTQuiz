@@ -42,6 +42,8 @@ public class GameplayActivity extends AppCompatActivity
     private CustomViewPager mQuestionPager;
     private Level mCurrentLevel;
     private MediaPlayer mGameplaySoundPlayer;
+    private boolean mPlaySound;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -68,7 +70,10 @@ public class GameplayActivity extends AppCompatActivity
                return mCurrentLevel.getQuestions().size();
             }
         });
+        mPlaySound=QueryPreferences.isSoundPlayed(this);
     }
+
+
 
     public static Intent newIntent(Context packageContext, UUID levelId)
     {
@@ -156,7 +161,10 @@ public class GameplayActivity extends AppCompatActivity
             @Override
             public void onPrepared(MediaPlayer mp)
             {
-                mGameplaySoundPlayer.start();
+                if (mPlaySound)
+                {
+                    mGameplaySoundPlayer.start();
+                }
             }
         });
 
